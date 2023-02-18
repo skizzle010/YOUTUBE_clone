@@ -16,9 +16,12 @@ mongoose
   .then(() => console.log("Db connected"))
   .catch((err) => console.log(err));
 
-app.use(cookieParser)
+app.use(cookieParser())
 app.use(express.json());
 app.use("/api/auth", authRoute);
+app.get("/",(req,res)=>{
+  res.send("running")
+})
 
 app.use((err, req, res, next) => {
   const status = err.status || 500;

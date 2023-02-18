@@ -1,52 +1,63 @@
-const mongoose = require("mongoose");
-const User = require("../models/User");
-const CryptoJS = require("crypto-js");
 const { createError } = require("../error");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
+exports.update = async (req, res, next) => {
+  if (req.params.id === req.user.id) {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: req.body,
+        },
+        { new: true }
+      );
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      next(err);
+    }
+  } else {
+    return next(createError(403, "you can only update your account"));
+  }
+};
 
-exports.signup = async (req, res, next) => {
-    const newUser = new User({
-    username: req.body.username,
-    email: req.body.email,
-    password: CryptoJS.AES.encrypt(
-      req.body.password,
-      process.env.PASS_SEC
-    ).toString(),
-  });
+exports.deleteUser = async (req, res, next) => {
+  if (req.params.id === req.user.id) {
+    try {
+      await User.findByIdAndDelete(req.params.id);
+      res.status(200).json("The user has been deleted!");
+    } catch (err) {
+      next(err);
+    }
+  } else {
+    return next(createError(403, "You can only delete your account!"));
+  }
+};
+
+exports.getUser = async (req, res, next) => {
   try {
-    const savedUser = await newUser.save();
-    res.status(200).json(savedUser);
+    const user = await User.findById(req.params.id);
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }
 };
 
-exports.signin = async (req, res, next) => {
+exports.subscribeUser = async (req, res, next) => {
   try {
-    const user = await User.findOne({ username: req.body.username });
-    if (!user) return next(createError(404, "User not found"));
-    const hashedPassword = CryptoJS.AES.decrypt(
-      user.password,
-      process.env.PASS_SEC
-    );
-    const originalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
-
-    originalPassword !== req.body.password &&
-      res.status(401).json("Wrong Credentials!");
-
-    const accessToken = jwt.sign(
-      {
-        id: user._id,
-        isAdmin: user.isAdmin,
-      },
-      process.env.JWT_SEC,
-      { expiresIn: "5d" }
-    );
-    res.cookie("access_token",accessToken,{
-        httpOnly:true
-    }).status(200).json( user);
+    await User.findById(req.user.id, {
+      $push: { subscribedUser: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, {
+      $inc: { subscriber: 1 },
+    });
+    res.status(200).json("Subscription successful")
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
   }
 };
+
+exports.unsubscibeUser = (req, res, next) => {};
+
+exports.like = (req, res, next) => {};
+exports.dislike = (req, res, next) => {};

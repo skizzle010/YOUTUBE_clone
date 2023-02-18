@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema(
     subscribedUser:{ type:[String]}
   },
   { timestamps: true }
+
+  
 );
 
 UserSchema.methods.toJSON = function () {

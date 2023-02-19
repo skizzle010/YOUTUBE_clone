@@ -16,7 +16,7 @@ router.get('/find/:id',getUser)
 router.put('/sub/:id',verifyToken,subscribeUser)
 
 //unsubscribe
-router.put('/unsub/:id',unsubscibeUser)
+router.put('/unsub/:id',verifyToken,unsubscibeUser)
 
 //like
 router.put('/like/:videoId',like)

@@ -49,15 +49,27 @@ exports.subscribeUser = async (req, res, next) => {
       $push: { subscribedUser: req.params.id },
     });
     await User.findByIdAndUpdate(req.params.id, {
-      $inc: { subscriber: 1 },
+      $inc: { subscriber: -1 },
+    });
+    res.status(200).json("Unubscription successful")
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.unsubscibeUser = async (req, res, next) => {
+  try {
+    await User.findById(req.user.id, {
+      $pull: { subscribedUser: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, {
+      $dec: { subscriber: 1 },
     });
     res.status(200).json("Subscription successful")
   } catch (err) {
     next(err);
   }
 };
-
-exports.unsubscibeUser = (req, res, next) => {};
 
 exports.like = (req, res, next) => {};
 exports.dislike = (req, res, next) => {};

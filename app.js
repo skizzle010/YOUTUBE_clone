@@ -2,10 +2,11 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
 const authRoute = require("./routes/auth");
-const userRoute = require("./routes/user")
-
+const userRoute = require("./routes/user");
+const videoRoute = require("./routes/videos");
+const commentRoute = require("./routes/comments");
 
 dotenv.config();
 
@@ -18,13 +19,15 @@ mongoose
   .then(() => console.log("Db connected"))
   .catch((err) => console.log(err));
 
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(express.json());
 app.use("/api/auth", authRoute);
-app.use("/api/users",userRoute)
-app.get("/",(req,res)=>{
-  res.send("running")
-})
+app.use("/api/users", userRoute);
+app.use("/api/videos", videoRoute);
+app.use("/api/comments", commentRoute);
+app.get("/", (req, res) => {
+  res.send("running");
+});
 
 app.use((err, req, res, next) => {
   const status = err.status || 500;

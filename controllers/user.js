@@ -45,13 +45,18 @@ exports.getUser = async (req, res, next) => {
 
 exports.subscribeUser = async (req, res, next) => {
   try {
-    await User.findById(req.user.id, {
-      $push: { subscribedUser: req.params.id },
-    });
-    await User.findByIdAndUpdate(req.params.id, {
-      $inc: { subscriber: -1 },
-    });
-    res.status(200).json("Unubscription successful")
+    const user = await User.findById(req.user.id);
+    if (user.subscribedUser.includes(req.params.id)) {
+      res.status(403).json("You already subscribed this user");
+    } else {
+      await User.findByIdAndUpdate(req.user.id, {
+        $push: { subscribedUser: req.params.id },
+      });
+      await User.findByIdAndUpdate(req.params.id, {
+        $inc: { subscriber: 1 },
+      });
+      res.status(200).json("subscription successful");
+    }
   } catch (err) {
     next(err);
   }
@@ -59,17 +64,47 @@ exports.subscribeUser = async (req, res, next) => {
 
 exports.unsubscibeUser = async (req, res, next) => {
   try {
-    await User.findById(req.user.id, {
-      $pull: { subscribedUser: req.params.id },
-    });
-    await User.findByIdAndUpdate(req.params.id, {
-      $dec: { subscriber: 1 },
-    });
-    res.status(200).json("Subscription successful")
+    const user = await User.findById(req.user.id);
+    if (user.subscribedUser.includes(req.params.id)) {
+      await User.findByIdAndUpdate(req.user.id, {
+        $pull: { subscribedUser: req.params.id },
+      });
+      await User.findByIdAndUpdate(req.params.id, {
+        $inc: { subscriber: -1 },
+      });
+      res.status(200).json("unsubscription successful");
+    } else {
+      res.status(403).json("You are not subscribed this user");
+    }
   } catch (err) {
     next(err);
   }
 };
 
-exports.like = (req, res, next) => {};
-exports.dislike = (req, res, next) => {};
+exports.like = async (req, res, next) => {
+  const id = req.user.id;
+  const videoId = req.params.videoId;
+  try {
+    await Video.findByIdAndUpdate(videoId, {
+      $addToSet: { likes: id },
+      $pull: { dislikes: id },
+    });
+    res.status(200).json("The video has been liked.");
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.dislike = async (req, res, next) => {
+  const id = req.user.id;
+  const videoId = req.params.videoId;
+  try {
+    await Video.findByIdAndUpdate(videoId, {
+      $addToSet: { dislikes: id },
+      $pull: { likes: id },
+    });
+    res.status(200).json("The video has been disliked.");
+  } catch (err) {
+    next(err);
+  }
+};

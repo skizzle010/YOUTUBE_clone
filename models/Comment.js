@@ -9,5 +9,4 @@ const CommentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Video",VideoSchema)
-
+module.exports = mongoose.model("Comment", CommentSchema);
